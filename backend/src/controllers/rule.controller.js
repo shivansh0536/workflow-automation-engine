@@ -1,5 +1,6 @@
 const prisma         = require('../database/prisma');
 const ActionFactory  = require('../services/actions/ActionFactory');
+const ruleEngine     = require('../ruleEngine/RuleEngine');
 
 const listRules = async (req, res, next) => {
   try {
@@ -63,7 +64,32 @@ const toggleRule = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const getRuleById = async (req, res, next) => {
+  try {
+    const rule = await prisma.rule.findUnique({
+      where: { id: req.params.id },
+      include: { _count: { select: { actionLogs: true } } },
+    });
+    if (!rule) return res.status(404).json({ error: 'Rule not found' });
+    res.json(rule);
+  } catch (err) { next(err); }
+};
+
+const testRule = async (req, res, next) => {
+  try {
+    const { conditionField, conditionOperator, conditionValue, actionType, payload } = req.body;
+    if (!conditionField || !conditionOperator || conditionValue === undefined || !actionType || !payload) {
+      return res.status(400).json({ error: 'conditionField, conditionOperator, conditionValue, actionType, and payload are required' });
+    }
+    const result = ruleEngine.dryRun(
+      { conditionField, conditionOperator, conditionValue: Number(conditionValue), actionType },
+      payload
+    );
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
 const getAvailableActions = (_req, res) =>
   res.json({ actions: ActionFactory.getAvailableActions() });
 
-module.exports = { listRules, createRule, updateRule, deleteRule, toggleRule, getAvailableActions };
+module.exports = { listRules, getRuleById, createRule, updateRule, deleteRule, toggleRule, testRule, getAvailableActions };

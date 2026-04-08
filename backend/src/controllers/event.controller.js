@@ -1,5 +1,6 @@
 const prisma     = require('../database/prisma');
 const ruleEngine = require('../services/ruleEngine.service');
+const EventModel = require('../models/Event');
 
 const EVENT_TYPES = [
   'AttendanceMarked', 'LeaveApproved', 'LeaveRejected',
@@ -39,6 +40,20 @@ const triggerEvent = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-const getEventTypes = (_req, res) => res.json({ eventTypes: EVENT_TYPES });
+const getEventById = async (req, res, next) => {
+  try {
+    const event = await prisma.hREvent.findUnique({
+      where: { id: req.params.id },
+      include: {
+        employee:   { select: { id: true, name: true, department: true } },
+        actionLogs: { include: { rule: { select: { name: true, actionType: true } } } },
+      },
+    });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    res.json(event);
+  } catch (err) { next(err); }
+};
 
-module.exports = { listEvents, triggerEvent, getEventTypes };
+const getEventTypes = (_req, res) => res.json({ eventTypes: EventModel.getValidTypes() });
+
+module.exports = { listEvents, getEventById, triggerEvent, getEventTypes };
