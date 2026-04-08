@@ -1,5 +1,6 @@
-const express = require('express');
-const cors    = require('cors');
+const express      = require('express');
+const cors         = require('cors');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -24,13 +25,13 @@ app.use('/api/events',      require('./routes/event.routes'));
 app.use('/api/action-logs', require('./routes/actionLog.routes'));
 app.use('/api/salary',      require('./routes/salary.routes'));
 
+// ─── Dashboard ─────────────────────────────────────────────────────────────
+app.use('/api/dashboard',   require('./routes/dashboard.routes'));
+
 // ─── 404 ───────────────────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ error: 'Route not found' }));
 
-// ─── Global Error Handler ──────────────────────────────────────────────────
-app.use((err, _req, res, _next) => {
-  console.error('[Error]', err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
-});
+// ─── Global Error Handler (extracted to middleware) ────────────────────────
+app.use(errorHandler);
 
 module.exports = app;

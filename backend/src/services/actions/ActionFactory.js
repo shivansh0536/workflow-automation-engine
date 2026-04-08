@@ -1,8 +1,10 @@
-const DeductSalaryAction    = require('./DeductSalaryAction');
-const AddBonusAction        = require('./AddBonusAction');
+const DeductSalaryAction = require('./DeductSalaryAction');
+const AddBonusAction = require('./AddBonusAction');
 const SendNotificationAction = require('./SendNotificationAction');
-const WarnEmployeeAction    = require('./WarnEmployeeAction');
-const GenerateCouponAction  = require('./GenerateCouponAction');
+const WarnEmployeeAction = require('./WarnEmployeeAction');
+const GenerateCouponAction = require('./GenerateCouponAction');
+const AutoApproveLeaveAction = require('./AutoApproveLeaveAction');
+const EscalateAction = require('./EscalateAction');
 
 /**
  * Factory Pattern — creates the correct Action object by type.
@@ -11,11 +13,13 @@ const GenerateCouponAction  = require('./GenerateCouponAction');
  */
 class ActionFactory {
   static _registry = {
-    DeductSalary:     DeductSalaryAction,
-    AddBonus:         AddBonusAction,
+    DeductSalary: DeductSalaryAction,
+    AddBonus: AddBonusAction,
     SendNotification: SendNotificationAction,
-    WarnEmployee:     WarnEmployeeAction,
-    GenerateCoupon:   GenerateCouponAction,
+    WarnEmployee: WarnEmployeeAction,
+    GenerateCoupon: GenerateCouponAction,
+    AutoApproveLeave: AutoApproveLeaveAction,
+    Escalate: EscalateAction,
   };
 
   static create(actionType) {

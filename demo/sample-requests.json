@@ -1,0 +1,250 @@
+{
+  "info": {
+    "name": "Workflow Automation Engine - Sample Requests",
+    "description": "Sample API requests for testing the Event-Driven Workflow Automation System"
+  },
+  "requests": [
+    {
+      "name": "Health Check",
+      "method": "GET",
+      "url": "http://localhost:4000/health"
+    },
+    {
+      "name": "Dashboard Stats",
+      "method": "GET",
+      "url": "http://localhost:4000/api/dashboard/stats"
+    },
+    {
+      "name": "Create Employee",
+      "method": "POST",
+      "url": "http://localhost:4000/api/employees",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "name": "Rahul Sharma",
+        "email": "rahul.sharma@company.com",
+        "department": "Engineering",
+        "role": "Senior Developer",
+        "baseSalary": 75000,
+        "joiningDate": "2024-01-15"
+      }
+    },
+    {
+      "name": "Create Employee - Priya",
+      "method": "POST",
+      "url": "http://localhost:4000/api/employees",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "name": "Priya Patel",
+        "email": "priya.patel@company.com",
+        "department": "HR",
+        "role": "HR Manager",
+        "baseSalary": 60000,
+        "joiningDate": "2023-06-01"
+      }
+    },
+    {
+      "name": "List Employees",
+      "method": "GET",
+      "url": "http://localhost:4000/api/employees"
+    },
+    {
+      "name": "Create Rule - Overtime Bonus",
+      "method": "POST",
+      "url": "http://localhost:4000/api/rules",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "name": "Overtime Bonus (>2hrs)",
+        "description": "Give 5% bonus when employee works more than 2 hours overtime",
+        "eventType": "AttendanceMarked",
+        "conditionField": "overtime_hours",
+        "conditionOperator": "gt",
+        "conditionValue": 2,
+        "actionType": "AddBonus",
+        "actionConfig": { "percentage": 5 },
+        "priority": 1
+      }
+    },
+    {
+      "name": "Create Rule - Late Entry Warning",
+      "method": "POST",
+      "url": "http://localhost:4000/api/rules",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "name": "Late Entry Warning",
+        "description": "Warn employees who arrive late (after 9:30 AM)",
+        "eventType": "AttendanceMarked",
+        "conditionField": "is_late",
+        "conditionOperator": "eq",
+        "conditionValue": 1,
+        "actionType": "WarnEmployee",
+        "actionConfig": { "warningType": "VERBAL", "reason": "Late arrival detected" },
+        "priority": 2
+      }
+    },
+    {
+      "name": "Create Rule - High Absence Deduction",
+      "method": "POST",
+      "url": "http://localhost:4000/api/rules",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "name": "Low Attendance Salary Deduction",
+        "description": "Deduct 10% salary when monthly attendance drops below 15 days",
+        "eventType": "AttendanceMarked",
+        "conditionField": "attendance_days",
+        "conditionOperator": "lt",
+        "conditionValue": 15,
+        "actionType": "DeductSalary",
+        "actionConfig": { "percentage": 10 },
+        "priority": 3
+      }
+    },
+    {
+      "name": "Create Rule - Escalate Excessive Absences",
+      "method": "POST",
+      "url": "http://localhost:4000/api/rules",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "name": "Escalate Excessive Absences",
+        "description": "Escalate to HR Manager when attendance drops below 10 days",
+        "eventType": "AttendanceMarked",
+        "conditionField": "attendance_days",
+        "conditionOperator": "lt",
+        "conditionValue": 10,
+        "actionType": "Escalate",
+        "actionConfig": { "escalateTo": "HR_MANAGER", "urgency": "HIGH" },
+        "priority": 1
+      }
+    },
+    {
+      "name": "Dry-Run Test Rule",
+      "method": "POST",
+      "url": "http://localhost:4000/api/rules/test",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "conditionField": "overtime_hours",
+        "conditionOperator": "gt",
+        "conditionValue": 2,
+        "actionType": "AddBonus",
+        "payload": { "overtime_hours": 5 }
+      }
+    },
+    {
+      "name": "List Rules",
+      "method": "GET",
+      "url": "http://localhost:4000/api/rules"
+    },
+    {
+      "name": "Available Actions",
+      "method": "GET",
+      "url": "http://localhost:4000/api/rules/actions"
+    },
+    {
+      "name": "Mark Attendance (with overtime - triggers bonus rule)",
+      "method": "POST",
+      "url": "http://localhost:4000/api/attendance",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "employeeId": "REPLACE_WITH_EMPLOYEE_ID",
+        "date": "2024-04-08",
+        "checkIn": "2024-04-08T09:00:00Z",
+        "checkOut": "2024-04-08T20:00:00Z",
+        "status": "PRESENT",
+        "overtime": 3
+      }
+    },
+    {
+      "name": "Mark Attendance (late entry - triggers warning rule)",
+      "method": "POST",
+      "url": "http://localhost:4000/api/attendance",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "employeeId": "REPLACE_WITH_EMPLOYEE_ID",
+        "date": "2024-04-09",
+        "checkIn": "2024-04-09T10:30:00Z",
+        "checkOut": "2024-04-09T18:00:00Z",
+        "status": "LATE",
+        "overtime": 0
+      }
+    },
+    {
+      "name": "Request Leave",
+      "method": "POST",
+      "url": "http://localhost:4000/api/leaves",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "employeeId": "REPLACE_WITH_EMPLOYEE_ID",
+        "type": "CASUAL",
+        "fromDate": "2024-04-15",
+        "toDate": "2024-04-17",
+        "reason": "Personal work"
+      }
+    },
+    {
+      "name": "Approve Leave (triggers LeaveApproved event)",
+      "method": "PATCH",
+      "url": "http://localhost:4000/api/leaves/REPLACE_WITH_LEAVE_ID/status",
+      "headers": { "Content-Type": "application/json" },
+      "body": { "status": "APPROVED" }
+    },
+    {
+      "name": "Trigger Custom Event",
+      "method": "POST",
+      "url": "http://localhost:4000/api/events/trigger",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "type": "OvertimeRecorded",
+        "employeeId": "REPLACE_WITH_EMPLOYEE_ID",
+        "payload": {
+          "overtime_hours": 8,
+          "shift_type": "NIGHT"
+        }
+      }
+    },
+    {
+      "name": "List Events",
+      "method": "GET",
+      "url": "http://localhost:4000/api/events"
+    },
+    {
+      "name": "Event Types",
+      "method": "GET",
+      "url": "http://localhost:4000/api/events/types"
+    },
+    {
+      "name": "Action Logs",
+      "method": "GET",
+      "url": "http://localhost:4000/api/action-logs"
+    },
+    {
+      "name": "Action Log Stats",
+      "method": "GET",
+      "url": "http://localhost:4000/api/action-logs/stats"
+    },
+    {
+      "name": "Salary Simulation",
+      "method": "GET",
+      "url": "http://localhost:4000/api/salary/REPLACE_WITH_EMPLOYEE_ID"
+    },
+    {
+      "name": "Create Workflow",
+      "method": "POST",
+      "url": "http://localhost:4000/api/workflows",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "name": "Employee Onboarding",
+        "trigger": "employee_created",
+        "description": "Automated onboarding workflow",
+        "steps": [
+          { "name": "Send Welcome Email", "type": "email", "config": { "subject": "Welcome to the team!" } },
+          { "name": "Wait 1 second", "type": "delay", "config": { "ms": 1000 } },
+          { "name": "Assign Training", "type": "http_request", "config": { "url": "/api/training", "method": "POST" } }
+        ]
+      }
+    },
+    {
+      "name": "List Workflows",
+      "method": "GET",
+      "url": "http://localhost:4000/api/workflows"
+    }
+  ]
+}
