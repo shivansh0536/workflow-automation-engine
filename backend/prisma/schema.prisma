@@ -1,14 +1,209 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Smart HR Automation System — Prisma Schema
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── EXISTING WORKFLOW ENGINE MODELS ───────────────────────────────────────
+
+model Workflow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      Status   @default(INACTIVE)
+  trigger     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  steps       Step[]
+  runs        WorkflowRun[]
+  @@map("workflows")
+}
+
+model Step {
+  id         String  @id @default(cuid())
+  workflowId String
+  name       String
+  type       String
+  config     Json    @default("{}")
+  order      Int
+  workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepRuns   StepRun[]
+  @@unique([workflowId, order])
+  @@map("steps")
+}
+
+model WorkflowRun {
+  id         String    @id @default(cuid())
+  workflowId String
+  status     RunStatus @default(PENDING)
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  error      String?
+  logs       Json      @default("[]")
+  workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepRuns   StepRun[]
+  @@map("workflow_runs")
+}
+
+model StepRun {
+  id            String    @id @default(cuid())
+  workflowRunId String
+  stepId        String
+  status        RunStatus @default(PENDING)
+  output        Json?
+  error         String?
+  executedAt    DateTime  @default(now())
+  workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+  step          Step        @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  @@map("step_runs")
+}
+
+// ─── HR SYSTEM MODELS ───────────────────────────────────────────────────────
+
+model Employee {
+  id          String         @id @default(cuid())
+  name        String
+  email       String         @unique
+  department  String
+  role        String
+  baseSalary  Float
+  joiningDate DateTime       @default(now())
+  status      EmployeeStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  attendances Attendance[]
+  leaves      Leave[]
+  events      HREvent[]
+  actionLogs  ActionLog[]
+  @@map("employees")
+}
+
+model Attendance {
+  id          String           @id @default(cuid())
+  employeeId  String
+  date        DateTime         @db.Date
+  checkIn     DateTime?
+  checkOut    DateTime?
+  hoursWorked Float?
+  overtime    Float            @default(0)
+  status      AttendanceStatus @default(PRESENT)
+  createdAt   DateTime         @default(now())
+  employee    Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  @@unique([employeeId, date])
+  @@map("attendances")
+}
+
+model Leave {
+  id         String      @id @default(cuid())
+  employeeId String
+  type       String
+  fromDate   DateTime
+  toDate     DateTime
+  reason     String?
+  status     LeaveStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  @@map("leaves")
+}
+
+model Rule {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  eventType         String
+  conditionField    String
+  conditionOperator String
+  conditionValue    Float
+  actionType        String
+  actionConfig      Json     @default("{}")
+  isActive          Boolean  @default(true)
+  priority          Int      @default(1)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  actionLogs        ActionLog[]
+  @@map("rules")
+}
+
+model HREvent {
+  id          String      @id @default(cuid())
+  type        String
+  employeeId  String?
+  payload     Json        @default("{}")
+  status      EventStatus @default(PENDING)
+  processedAt DateTime?
+  createdAt   DateTime    @default(now())
+  employee    Employee?   @relation(fields: [employeeId], references: [id])
+  actionLogs  ActionLog[]
+  @@map("hr_events")
+}
+
+model ActionLog {
+  id         String          @id @default(cuid())
+  eventId    String
+  ruleId     String
+  employeeId String?
+  actionType String
+  result     Json?
+  status     ActionLogStatus @default(SUCCESS)
+  error      String?
+  executedAt DateTime        @default(now())
+  event      HREvent         @relation(fields: [eventId], references: [id])
+  rule       Rule            @relation(fields: [ruleId], references: [id])
+  employee   Employee?       @relation(fields: [employeeId], references: [id])
+  @@map("action_logs")
+}
+
+// ─── ENUMS ─────────────────────────────────────────────────────────────────
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum RunStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LATE
+  ON_LEAVE
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum ActionLogStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
 }
